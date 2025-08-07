@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Solicitud de Financiación ISEN Centro Universitario: Sabadell Consumer Finance</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 38px; background: #f5f5f5; }
+    input, select { margin: 10px 0; padding: 8px; width: 100%; }
+    label { font-weight: bold; }
+    #resultado, #comision, #errorMensaje {
+      margin-top: 10px;
+      font-size: 1.1em;
+    }
+    #resultado, #comision { color: green; }
+    #errorMensaje { color: red; }
+    button {
+      padding: 10px;
+      background-color: #0078D4;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:disabled {
+      background-color: gray;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h2>Solicitud de Financiación ISEN Centro Universitario: Sabadell Consumer Finance</h2>
+  <form id="simuladorForm">
+    <label>Nombre:</label>
+    <input type="text" id="nombre" required>
+
+    <label>Apellido 1:</label>
+    <input type="text" id="apellido1" required>
+
+    <label>Apellido 2:</label>
+    <input type="text" id="apellido2" required>
+
+    <label>Fecha de nacimiento:</label>
+    <input type="date" id="fechaNacimiento" required>
+
+    <label>Teléfono móvil:</label>
+    <input type="text" id="telefono" required>
+
+    <label>Email:</label>
+    <input type="email" id="email" required>
+
+    <label>Importe (€):</label>
+    <input type="number" id="importe" required min="1" step="0.01">
+
+    <label>Plazo (meses):</label>
+    <select id="plazo" required>
+      <option value="">Selecciona...</option>
+      <option value="6">6</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
+      <option value="12">12</option>
+    </select>
+
+    <div id="resultado"></div>
+    <div id="comision"></div>
+    <div id="errorMensaje"></div>
+    <button type="submit">Calcular y enviar</button>
+  </form>
+
+<script>
+  const form = document.getElementById("simuladorForm");
+  const resultadoDiv = document.getElementById("resultado");
+  const comisionDiv = document.getElementById("comision");
+  const errorMensaje = document.getElementById("errorMensaje");
+  const boton = form.querySelector("button");
+
+  function getComisionPorPlazo(plazo) {
+    const comisiones = {
+      6: 0.025,
+      9: 0.036,
+      10: 0.0425,
+      12: 0.0475
+    };
+    return comisiones[plazo] || 0;
+  }
+
+  function calcularCuota(importe, plazo) {
+    const comision = getComisionPorPlazo(plazo);
+    const cuota = ((importe * comision) + importe) / plazo;
+    return cuota.toFixed(2);
+  }
+
+  function calcularComisionTotal(importe, plazo) {
+    const comision = getComisionPorPlazo(plazo);
+    return (importe * comision).toFixed(2);
+  }
+
+  function mostrarErrores(mensaje) {
+    errorMensaje.textContent = mensaje;
+    resultadoDiv.textContent = '';
+    comisionDiv.textContent = '';
+  }
+
+  function limpiarErrores() {
+    errorMensaje.textContent = '';
+  }
+
+  function esMayorDeEdad(fechaStr) {
+    const hoy = new Date();
+    const nacimiento = new Date(fechaStr);
+    const edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const m = hoy.getMonth() - nacimiento.getMonth();
+    return (edad > 18) || (edad === 18 && m >= 0);
+  }
+
+  function validarEmail(email) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  }
+
+  function validarTelefono(telefono) {
+    return /^([6|7])[0-9]{8}$/.test(telefono);
+  }
+
+  form.addEventListener('input', () => {
+    limpiarErrores();
+    const imp = parseFloat(document.getElementById("importe").value);
+    const pl = parseInt(document.getElementById("plazo").value);
+    if (!isNaN(imp) && !isNaN(pl)) {
+      const cuota = calcularCuota(imp, pl);
+      const comision = calcularComisionTotal(imp, pl);
+      resultadoDiv.textContent = `Cuota mensual estimada: ${cuota} €`;
+      comisionDiv.textContent = `Comisión total: ${comision} €`;
+    } else {
+      resultadoDiv.textContent = '';
+      comisionDiv.textContent = '';
+    }
+  });
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    limpiarErrores();
+
+    const nombre = document.getElementById("nombre").value.trim();
+    const apellido1 = document.getElementById("apellido1").value.trim();
+    const apellido2 = document.getElementById("apellido2").value.trim();
+    const fechaNacimiento = document.getElementById("fechaNacimiento").value;
+    const telefono = document.getElementById("telefono").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const imp = parseFloat(document.getElementById("importe").value);
+    const pl = parseInt(document.getElementById("plazo").value);
+
+    // Validaciones
+    if (!nombre || nombre.length < 3) return mostrarErrores("El nombre debe tener al menos 3 caracteres.");
+    if (!apellido1 || apellido1.length < 3) return mostrarErrores("El primer apellido debe tener al menos 3 caracteres.");
+    if (!apellido2 || apellido2.length < 3) return mostrarErrores("El segundo apellido debe tener al menos 3 caracteres.");
+    if (!fechaNacimiento || !esMayorDeEdad(fechaNacimiento)) return mostrarErrores("Debes ser mayor de edad (mínimo 18 años).");
+    if (!validarTelefono(telefono)) return mostrarErrores("El teléfono debe tener 9 dígitos y comenzar por 6 o 7.");
+    if (!validarEmail(email)) return mostrarErrores("Introduce un email válido.");
+    if (isNaN(imp) || imp <= 0 || imp > 6000) return mostrarErrores("El importe debe ser mayor que 0 y máximo 6.000 €.");
+    if (isNaN(pl)) return mostrarErrores("Selecciona un plazo válido.");
+
+    const cuota = calcularCuota(imp, pl);
+    const comision = calcularComisionTotal(imp, pl);
+
+    const datos = {
+      nombre,
+      apellido1,
+      apellido2,
+      fechaNacimiento,
+      telefono,
+      email,
+      importe: imp,
+      plazo: pl,
+      cuota,
+      comision,
+      fechaEnvio: new Date().toISOString()
+    };
+
+    fetch('https://prod-69.westeurope.logic.azure.com:443/workflows/a865fcb1f59748308ae635e2b26c73be/triggers/manual/paths/invoke?api-version=2016-06-01', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos)
+    }).then(res => {
+      if (!res.ok) throw new Error("Error de red o del servidor");
+      alert('Gracias, simulación enviada correctamente.');
+      boton.disabled = true;
+    }).catch(err => {
+      mostrarErrores("Error al enviar el formulario. Intenta nuevamente más tarde.\n" + err.message);
+    });
+  });
+</script>
