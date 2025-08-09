@@ -73,6 +73,16 @@
   const errorMensaje = document.getElementById("errorMensaje");
   const boton = form.querySelector("button");
 
+  // Leer token de la URL
+  function getParam(name) {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
+  }
+
+  const token = getParam("token") ? decodeURIComponent(getParam("token")) : "";
+  console.log("Token recibido:", token);
+
+  // Funciones de cálculo
   function getComisionPorPlazo(plazo) {
     const comisiones = {
       6: 0.025,
@@ -121,6 +131,7 @@
     return /^([6|7])[0-9]{8}$/.test(telefono);
   }
 
+  // Cálculo en tiempo real
   form.addEventListener('input', () => {
     limpiarErrores();
     const imp = parseFloat(document.getElementById("importe").value);
@@ -136,6 +147,7 @@
     }
   });
 
+  // Envío del formulario
   form.addEventListener('submit', e => {
     e.preventDefault();
     limpiarErrores();
@@ -162,7 +174,9 @@
     const cuota = calcularCuota(imp, pl);
     const comision = calcularComisionTotal(imp, pl);
 
+    // Construir el objeto que se enviará a Power Automate
     const datos = {
+      token_inicial: token, // El identificador único DNI+AÑO+FACTURA
       nombre,
       apellido1,
       apellido2,
