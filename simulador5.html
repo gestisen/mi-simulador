@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Simulador de financiación</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f6f8fa;
+        margin: 0;
+        padding: 0;
+        color: #333;
+    }
+    header {
+        background-color: #002147;
+        color: white;
+        padding: 20px;
+        text-align: center;
+        opacity: 0;
+        animation: fadeInHeader 1s forwards;
+    }
+    @keyframes fadeInHeader {
+        to { opacity: 1; }
+    }
+    header img {
+        max-height: 60px;
+        margin-bottom: 10px;
+    }
+    header h1 {
+        margin: 5px 0;
+        font-size: 1.4em;
+    }
+    /* Barra de progreso */
+    #progressBarContainer {
+        width: 100%;
+        background-color: #ddd;
+        height: 6px;
+        margin: 0;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,.2);
+    }
+    #progressBar {
+        height: 6px;
+        width: 0%;
+        background-color: #002147;
+        transition: width 0.4s ease;
+    }
+    form {
+        max-width: 700px;
+        background: white;
+        margin: 20px auto 40px auto;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    fieldset {
+        border: 2px solid #002147;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        padding: 15px;
+    }
+    legend {
+        font-weight: bold;
+        color: #002147;
+        padding: 0 10px;
+    }
+    label {
+        display: flex;
+        align-items: center;
+        margin-top: 12px;
+        font-weight: bold;
+    }
+    input, select {
+        width: 60%;
+        padding: 8px;
+        margin-top: 4px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+    .section-divider {
+        margin: 15px 0;
+        padding: 10px;
+        background-color: #f0f4f8;
+        border-left: 4px solid #002147;
+        font-size: 0.9em;
+    }
+    .importe-plazo {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+    }
+    .importe-plazo div {
+        flex: 1;
+    }
+    button {
+        background-color: #002147;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 20px;
+        position: relative;
+        overflow: hidden;
+        transition: background-color 0.3s ease;
+    }
+    button:hover:enabled {
+        background-color: #003366;
+    }
+    button:disabled {
+        background-color: #555;
+        cursor: not-allowed;
+    }
+    /* Spinner inside button */
+    .spinner {
+        border: 3px solid rgba(255,255,255,0.3);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 0.8s linear infinite;
+        position: absolute;
+        top: 50%;
+        left: 12px;
+        transform: translateY(-50%);
+        display: none;
+    }
+    button.loading .spinner {
+        display: block;
+    }
+    button.loading span.btn-text {
+        margin-left: 24px;
+        opacity: 0.7;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    /* Errores y resultados con fade */
+    .error, .resultados {
+        transition: opacity 0.3s ease, max-height 0.3s ease, padding 0.3s ease;
+        opacity: 0;
+        max-height: 0;
+        overflow: hidden;
+        padding: 0 10px;
+    }
+    .error.show, .resultados.show {
+        opacity: 1;
+        max-height: 200px;
+        padding: 10px;
+    }
+    .error {
+        color: red;
+        margin-top: 4px;
+        font-size: 0.9em;
+    }
+    .resultados {
+        margin-top: 15px;
+        background: #eaf1f8;
+        border-radius: 5px;
+        border: 1px solid #b5cce6;
+    }
+    /* Icono ayuda */
+    .help-icon {
+        display: inline-block;
+        background: #002147;
+        color: white;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        line-height: 16px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: bold;
+        margin-left: 6px;
+        cursor: help;
+        position: relative;
+        user-select: none;
+    }
+    /* Tooltip */
+    .help-icon:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 120%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #002147;
+        color: white;
+        padding: 6px 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+        font-size: 0.8em;
+        z-index: 10;
+        opacity: 1;
+        pointer-events: auto;
+        transition: opacity 0.2s ease;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    .help-icon::after {
+        opacity: 0;
+        pointer-events: none;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <img src="https://i.postimg.cc/RNDGS5W7/isen-centro-univ.jpg" alt="Logo" />
+    <h1 id="facturaInfo">Cargando información de la factura...</h1>
+</header>
+
+<!-- Barra de progreso -->
+<div id="progressBarContainer">
+    <div id="progressBar"></div>
+</div>
+
+<form id="financiacionForm" novalidate>
+
+    <!-- Datos del titular -->
+    <fieldset>
+        <legend>Datos del Titular de la Financiación</legend>
+        
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" required />
+
+        <label for="apellido1">Apellido 1:</label>
+        <input type="text" id="apellido1" name="apellido1" required />
+
+        <label for="apellido2">Apellido 2:</label>
+        <input type="text" id="apellido2" name="apellido2" required />
+
+        <label for="telefono">Teléfono móvil:
+            <span class="help-icon" data-tooltip="Debe tener 9 dígitos y empezar por 6 o 7.">?</span>
+        </label>
+        <input type="tel" id="telefono" name="telefono" required pattern="^[67]\d{8}$" maxlength="9" />
+        <div id="errorTelefono" class="error">El teléfono debe tener 9 dígitos y empezar por 6 o 7.</div>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required />
+
+        <label for="fechaNacimiento">Fecha de Nacimiento:
+            <span class="help-icon" data-tooltip="Debe ser mayor o igual a 18 años.">?</span>
+        </label>
+        <input type="date" id="fechaNacimiento" name="fechaNacimiento" required />
+        <div id="errorFecha" class="error">Debe ser mayor o igual a 18 años.</div>
+    </fieldset>
+
+    <!-- Datos solicitud -->
+    <fieldset>
+        <legend>Datos Solicitud Financiación</legend>
+        
+        <div class="section-divider">
+            A continuación introduzca el importe a financiar y seleccione uno de los plazos disponibles para poder obtener la cuota mensual de su solicitud de financiación.  
+            Esta cuota ya lleva incluida y prorrateada la comisión de apertura que aparece debajo.  
+            También, recordarle que el importe a financiar será como máximo el importe total de su factura o una cantidad inferior a ésta.
+        </div>
+
+        <div class="importe-plazo">
+            <div>
+                <label for="importe">Importe (€):
+                    <span class="help-icon" data-tooltip="No puede superar el importe máximo financiable.">?</span>
+                </label>
+                <input type="number" id="importe" name="importe" step="0.01" required />
+                <div id="errorImporte" class="error">El importe no puede superar el máximo financiable.</div>
+            </div>
+            <div>
+                <label for="plazo">Plazo (meses):</label>
+                <select id="plazo" name="plazo" required>
+                    <option value="">Seleccione...</option>
+                    <option value="6">6 meses</option>
+                    <option value="9">9 meses</option>
+                    <option value="10">10 meses</option>
+                    <option value="12">12 meses</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Resultados cálculo -->
+        <div class="resultados" id="resultados">
+            <p>Comisión de apertura: <span id="comision"></span> €</p>
+            <p>Cuota mensual: <span id="cuota"></span> €</p>
+        </div>
+    </fieldset>
+
+    <button type="submit" id="submitBtn"><span class="btn-text">Enviar solicitud</span><div class="spinner"></div></button>
+</form>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const rawToken = params.get('token') || '';
+    const decoded = decodeURIComponent(rawToken);
+    const partes = decoded.split('|'); // IDFRA|DNI|AÑO|NUMFACTURA|IMPORTE
+    let numFactura = '';
+    let importeMax = 0;
+
+    if (partes.length >= 5) {
+        numFactura = partes[3];
+        importeMax = parseFloat(partes[4]) || 0;
+    }
+
+    if (numFactura) {
+        document.getElementById('facturaInfo').textContent =
+            `Factura Nº ${numFactura} — Importe máximo financiable: ${importeMax.toFixed(2)} €`;
+    } else {
+        document.getElementById('facturaInfo').textContent =
+            'No se ha podido identificar la factura.';
+    }
+
+    const importeInput = document.getElementById('importe');
+    const plazoInput = document.getElementById('plazo');
+    const errorImporte = document.getElementById('errorImporte');
+    const resultadosDiv = document.getElementById('resultados');
+    const comisionSpan = document.getElementById('comision');
+    const cuotaSpan = document.getElementById('cuota');
+    const telefonoInput = document.getElementById('telefono');
+    const errorTelefono = document.getElementById('errorTelefono');
+    const fechaInput = document.getElementById('fechaNacimiento');
+    const errorFecha = document.getElementById('errorFecha');
+    const submitBtn = document.getElementById('submitBtn');
+    const progressBar = document.getElementById('progressBar');
+
+    // Ocultar mensajes inicialmente
+    errorTelefono.classList.remove('show');
+    errorFecha.classList.remove('show');
+    errorImporte.classList.remove('show');
+    resultadosDiv.classList.remove('show');
+
+    // Validar teléfono móvil: 9 dígitos, empieza por 6 o 7
+    function validarTelefono() {
+        const tel = telefonoInput.value.trim();
+        const valido = /^[67]\d{8}$/.test(tel);
+        if (!valido && tel.length > 0) {
+            errorTelefono.classList.add('show');
+        } else {
+            errorTelefono.classList.remove('show');
+        }
+        return valido;
+    }
+
+    telefonoInput.addEventListener('input', () => {
+        // Limitar a 9 caracteres numéricos
+        telefonoInput.value = telefonoInput.value.replace(/[^0-9]/g, '').slice(0, 9);
+        validarTelefono();
+        actualizarProgreso();
+    });
+
+    // Validar edad >= 18 años
+    function validarEdad() {
+        const fechaVal = fechaInput.value;
+        if (!fechaVal) {
+            errorFecha.classList.remove('show');
+            return false;
+        }
+        const fechaNacimiento = new Date(fechaVal);
+        const hoy = new Date();
+        let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+        const m = hoy.getMonth() - fechaNacimiento.getMonth();
+        const d = hoy.getDate() - fechaNacimiento.getDate();
+        if (m < 0 || (m === 0 && d < 0)) {
+            edad--;
+        }
+
+        if (edad >= 18) {
+            errorFecha.classList.remove('show');
+            return true;
+        } else {
+            errorFecha.classList.add('show');
+            return false;
+        }
+    }
+
+    fechaInput.addEventListener('change', () => {
+        validarEdad();
+        actualizarProgreso();
+    });
+
+    // Validar importe máximo
+    function validarImporte() {
+        const importe = parseFloat(importeInput.value);
+        if (importeMax > 0 && importe > importeMax) {
+            errorImporte.classList.add('show');
+            resultadosDiv.classList.remove('show');
+            return false;
+        } else {
+            errorImporte.classList.remove('show');
+            return true;
+        }
+    }
+
+    importeInput.addEventListener('input', () => {
+        validarImporte();
+        calcular();
+        actualizarProgreso();
+    });
+
+    plazoInput.addEventListener('change', () => {
+        calcular();
+        actualizarProgreso();
+    });
+
+    // Cálculo cuota y comisión
+    function calcular() {
+        const importe = parseFloat(importeInput.value);
+        const plazo = parseInt(plazoInput.value);
+
+        if (!validarImporte()) {
+            return;
+        }
+
+        if (!isNaN(importe) && !isNaN(plazo) && plazo > 0) {
+            let tasa = 0;
+            switch (plazo) {
+                case 6: tasa = 0.025; break;
+                case 9: tasa = 0.036; break;
+                case 10: tasa = 0.045; break;
+                case 12: tasa = 0.0475; break;
+            }
+            const comision = +(importe * tasa).toFixed(2);
+            const totalFinanciado = importe + comision;
+            const cuota = +(totalFinanciado / plazo).toFixed(2);
+            comisionSpan.textContent = comision.toFixed(2);
+            cuotaSpan.textContent = cuota.toFixed(2);
+            resultadosDiv.classList.add('show');
+        } else {
+            resultadosDiv.classList.remove('show');
+        }
+    }
+
+    // Barra de progreso que calcula % de campos completados
+    function actualizarProgreso() {
+        let totalCampos = 9;
+        let camposCompletos = 0;
+
+        if (document.getElementById('nombre').value.trim() !== '') camposCompletos++;
+        if (document.getElementById('apellido1').value.trim() !== '') camposCompletos++;
+        if (document.getElementById('apellido2').value.trim() !== '') camposCompletos++;
+        if (validarTelefono()) camposCompletos++;
+        if (document.getElementById('email').value.trim() !== '') camposCompletos++;
+        if (validarEdad()) camposCompletos++;
+        if (importeInput.value.trim() !== '') camposCompletos++;
+        if (plazoInput.value.trim() !== '') camposCompletos++;
+        // Para importe correcto
+        if (!errorImporte.classList.contains('show')) camposCompletos++;
+
+        let porcentaje = (camposCompletos / totalCampos) * 100;
+        progressBar.style.width = porcentaje + '%';
+    }
+
+    // Validar email HTML5 con checkValidity()
+    function validarEmail() {
+        const emailInput = document.getElementById('email');
+        return emailInput.checkValidity() && emailInput.value.trim() !== '';
+    }
+    document.getElementById('email').addEventListener('input', () => {
+        actualizarProgreso();
+    });
+
+    // Inicialización progreso
+    actualizarProgreso();
+
+    // Envío de formulario
+    document.getElementById('financiacionForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        // Validar campos básicos y errores visibles
+        const nombre = document.getElementById('nombre').value.trim();
+        const apellido1 = document.getElementById('apellido1').value.trim();
+        const apellido2 = document.getElementById('apellido2').value.trim();
+        const telefonoOk = validarTelefono();
+        const fechaOk = validarEdad();
+        const emailOk = validarEmail();
+        const importeOk = validarImporte();
+        const plazoOk = plazoInput.value.trim() !== '';
+
+        if (!nombre || !apellido1 || !apellido2 || !telefonoOk || !fechaOk || !emailOk || !importeOk || !plazoOk) {
+            alert('Por favor, rellene todos los campos correctamente antes de enviar.');
+            return;
+        }
+
+        // Bloquear botón y mostrar spinner
+        submitBtn.disabled = true;
+        submitBtn.classList.add('loading');
+
+        // Simular envío con timeout (ejemplo)
+        setTimeout(() => {
+            alert('Solicitud enviada correctamente. ¡Gracias!');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('loading');
+            // Opcional: limpiar form o redirigir
+            // document.getElementById('financiacionForm').reset();
+            // resultadosDiv.classList.remove('show');
+            // progressBar.style.width = '0%';
+        }, 2000);
+    });
+</script>
+
+</body>
+</html>
