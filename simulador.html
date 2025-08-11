@@ -12,6 +12,14 @@
         padding: 0;
         color: #333;
     }
+    .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.8s ease forwards;
+    }
+    @keyframes fadeInUp {
+        to { opacity: 1; transform: translateY(0); }
+    }
     header {
         background-color: #002147;
         color: white;
@@ -33,14 +41,12 @@
         padding: 20px;
         border-radius: 10px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        position: relative;
     }
     fieldset {
         border: 2px solid #002147;
         border-radius: 8px;
         margin-bottom: 20px;
         padding: 15px;
-        transition: all 0.3s ease;
     }
     legend {
         font-weight: bold;
@@ -58,13 +64,21 @@
         margin-top: 4px;
         border-radius: 5px;
         border: 1px solid #ccc;
-        transition: border-color 0.3s ease;
+        transition: border-color 0.2s ease;
     }
-    input:valid, select:valid {
-        border-color: #28a745;
-    }
-    input:invalid:focus, select:invalid:focus {
+    input:invalid {
         border-color: red;
+    }
+    input.valid {
+        border-color: green;
+    }
+    .error {
+        color: red;
+        font-size: 0.85em;
+        display: none;
+    }
+    .error.show {
+        display: block;
     }
     .section-divider {
         margin: 15px 0;
@@ -89,42 +103,10 @@
         border-radius: 5px;
         cursor: pointer;
         margin-top: 20px;
-        position: relative;
-        transition: background-color 0.3s ease;
-    }
-    button:hover:enabled {
-        background-color: #003366;
     }
     button:disabled {
         background-color: #555;
         cursor: not-allowed;
-    }
-    button .spinner {
-        display: none;
-        width: 16px;
-        height: 16px;
-        border: 2px solid #fff;
-        border-top: 2px solid transparent;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-    }
-    @keyframes spin {
-        0% { transform: translateY(-50%) rotate(0deg); }
-        100% { transform: translateY(-50%) rotate(360deg); }
-    }
-    .error {
-        color: red;
-        margin-top: 4px;
-        font-size: 0.9em;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    .error.show {
-        opacity: 1;
     }
     .resultados {
         margin-top: 15px;
@@ -138,19 +120,6 @@
     .resultados.show {
         opacity: 1;
     }
-    .progress-bar {
-        height: 6px;
-        background-color: #ccc;
-        border-radius: 3px;
-        overflow: hidden;
-        margin-bottom: 15px;
-    }
-    .progress-bar-fill {
-        height: 100%;
-        width: 0;
-        background-color: #28a745;
-        transition: width 0.4s ease;
-    }
     .toast {
         position: fixed;
         bottom: 20px;
@@ -159,7 +128,6 @@
         color: white;
         padding: 12px 20px;
         border-radius: 5px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         opacity: 0;
         transform: translateY(20px);
         transition: opacity 0.4s ease, transform 0.4s ease;
@@ -173,242 +141,186 @@
 </head>
 <body>
 
-<header>
+<header class="fade-in" style="animation-delay:0.1s;">
     <img src="https://i.postimg.cc/RNDGS5W7/isen-centro-univ.jpg" alt="Logo" />
     <h1 id="facturaInfo">Cargando información de la factura...</h1>
 </header>
 
-<form id="financiacionForm" novalidate>
-    <div class="progress-bar">
-        <div class="progress-bar-fill" id="progressFill"></div>
-    </div>
-
-    <!-- Datos del titular -->
+<form id="financiacionForm" novalidate class="fade-in" style="animation-delay:0.3s;">
     <fieldset>
         <legend>Datos del Titular de la Financiación</legend>
-        
-        <label for="nombre">Nombre:</label>
-        <input type="text" id="nombre" name="nombre" required />
-
-        <label for="apellido1">Apellido 1:</label>
-        <input type="text" id="apellido1" name="apellido1" required />
-
-        <label for="apellido2">Apellido 2:</label>
-        <input type="text" id="apellido2" name="apellido2" required />
-
-        <label for="telefono">Teléfono móvil:</label>
-        <input type="tel" id="telefono" name="telefono" required pattern="^[67]\d{8}$" maxlength="9" />
-        <div id="errorTelefono" class="error">El teléfono debe tener 9 dígitos y empezar por 6 o 7.</div>
-
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required />
-
-        <label for="fechaNacimiento">Fecha de Nacimiento:</label>
-        <input type="date" id="fechaNacimiento" name="fechaNacimiento" required />
-        <div id="errorFecha" class="error">Debe ser mayor o igual a 18 años.</div>
+        <label>Nombre:
+            <input type="text" id="nombre" required>
+            <div class="error" id="errNombre">Campo obligatorio</div>
+        </label>
+        <label>Apellido 1:
+            <input type="text" id="apellido1" required>
+            <div class="error" id="errApellido1">Campo obligatorio</div>
+        </label>
+        <label>Apellido 2:
+            <input type="text" id="apellido2" required>
+            <div class="error" id="errApellido2">Campo obligatorio</div>
+        </label>
+        <label>Teléfono móvil:
+            <input type="tel" id="telefono" required pattern="^[0-9]{9}$">
+            <div class="error" id="errTelefono">Debe tener 9 dígitos numéricos</div>
+        </label>
+        <label>Email:
+            <input type="email" id="email" required>
+            <div class="error" id="errEmail">Formato de email inválido</div>
+        </label>
+        <label>Fecha de Nacimiento:
+            <input type="date" id="fechaNacimiento" required>
+            <div class="error" id="errFecha">Debe ser mayor de 18 años</div>
+        </label>
     </fieldset>
 
-    <!-- Datos solicitud -->
     <fieldset>
         <legend>Datos Solicitud Financiación</legend>
-        
         <div class="section-divider">
-            A continuación introduzca el importe a financiar y seleccione uno de los plazos disponibles para poder obtener la cuota mensual de su solicitud de financiación.  
-            Esta cuota ya lleva incluida y prorrateada la comisión de apertura que aparece debajo.  
-            También, recordarle que el importe a financiar será como máximo el importe total de su factura o una cantidad inferior a ésta.
+            A continuación introduzca el importe a financiar y seleccione uno de los plazos disponibles...
         </div>
-
         <div class="importe-plazo">
             <div>
-                <label for="importe">Importe (€):</label>
-                <input type="number" id="importe" name="importe" step="0.01" required />
-                <div id="errorImporte" class="error">El importe no puede superar el máximo financiable.</div>
+                <label>Importe (€):
+                    <input type="number" id="importe" required>
+                    <div class="error" id="errImporte">No puede superar el total de la factura</div>
+                </label>
             </div>
             <div>
-                <label for="plazo">Plazo (meses):</label>
-                <select id="plazo" name="plazo" required>
-                    <option value="">Seleccione...</option>
-                    <option value="6">6 meses</option>
-                    <option value="9">9 meses</option>
-                    <option value="10">10 meses</option>
-                    <option value="12">12 meses</option>
-                </select>
+                <label>Plazo (meses):
+                    <select id="plazo" required>
+                        <option value="">Seleccione</option>
+                        <option value="3">3</option>
+                        <option value="6">6</option>
+                        <option value="9">9</option>
+                        <option value="12">12</option>
+                    </select>
+                    <div class="error" id="errPlazo">Seleccione un plazo</div>
+                </label>
             </div>
         </div>
-
-        <!-- Resultados cálculo -->
-        <div class="resultados" id="resultados">
-            <p>Comisión de apertura: <span id="comision"></span> €</p>
-            <p>Cuota mensual: <span id="cuota"></span> €</p>
-        </div>
+        <div class="resultados" id="resultadosCalculo"></div>
     </fieldset>
 
-    <button type="submit" id="submitBtn">
-        Enviar solicitud
-        <div class="spinner" id="spinner"></div>
-    </button>
+    <button type="submit" id="submitBtn" disabled>Enviar</button>
 </form>
 
 <div class="toast" id="toastMsg"></div>
 
 <script>
     const params = new URLSearchParams(window.location.search);
-    const rawToken = params.get('token') || '';
-    const decoded = decodeURIComponent(rawToken);
-    const partes = decoded.split('|');
-    let numFactura = '';
-    let importeMax = 0;
+    const token = params.get("token");
+    let importeFactura = 0;
 
-    if (partes.length >= 5) {
-        numFactura = partes[3];
-        importeMax = parseFloat(partes[4]) || 0;
+    if (token) {
+        const decoded = decodeURIComponent(token).split("|");
+        importeFactura = parseFloat(decoded[4]);
+        document.getElementById("facturaInfo").textContent = `Factura Nº ${decoded[3]} (${decoded[2]}) - Importe máximo: ${importeFactura.toFixed(2)} €`;
     }
 
-    if (numFactura) {
-        document.getElementById('facturaInfo').textContent =
-            `Factura Nº ${numFactura} — Importe máximo financiable: ${importeMax.toFixed(2)} €`;
-    } else {
-        document.getElementById('facturaInfo').textContent =
-            'No se ha podido identificar la factura.';
-    }
+    const form = document.getElementById("financiacionForm");
+    const inputs = form.querySelectorAll("input, select");
+    const submitBtn = document.getElementById("submitBtn");
+    const resultados = document.getElementById("resultadosCalculo");
 
-    const inputs = document.querySelectorAll('input[required], select[required]');
-    const progressFill = document.getElementById('progressFill');
-    const importeInput = document.getElementById('importe');
-    const plazoInput = document.getElementById('plazo');
-    const errorImporte = document.getElementById('errorImporte');
-    const resultadosDiv = document.getElementById('resultados');
-    const comisionSpan = document.getElementById('comision');
-    const cuotaSpan = document.getElementById('cuota');
-    const telefonoInput = document.getElementById('telefono');
-    const errorTelefono = document.getElementById('errorTelefono');
-    const fechaInput = document.getElementById('fechaNacimiento');
-    const errorFecha = document.getElementById('errorFecha');
-    const submitBtn = document.getElementById('submitBtn');
-    const spinner = document.getElementById('spinner');
-    const toastMsg = document.getElementById('toastMsg');
-
-    function showToast(msg, success = true) {
-        toastMsg.textContent = msg;
-        toastMsg.style.background = success ? '#28a745' : '#dc3545';
-        toastMsg.classList.add('show');
-        setTimeout(() => toastMsg.classList.remove('show'), 4000);
-    }
-
-    function updateProgress() {
-        const filled = Array.from(inputs).filter(el => el.value.trim() !== '').length;
-        const percent = Math.round((filled / inputs.length) * 100);
-        progressFill.style.width = percent + '%';
-    }
-
-    function validarTelefono() {
-        const valido = /^[67]\d{8}$/.test(telefonoInput.value);
-        errorTelefono.classList.toggle('show', !valido);
+    function validarCampo(input, errorId, fnExtra = null) {
+        const errorDiv = document.getElementById(errorId);
+        let valido = input.checkValidity();
+        if (fnExtra) valido = valido && fnExtra(input.value);
+        if (!valido) {
+            errorDiv.classList.add("show");
+            input.classList.remove("valid");
+        } else {
+            errorDiv.classList.remove("show");
+            input.classList.add("valid");
+        }
         return valido;
     }
 
-    function validarEdad() {
-        const fechaVal = fechaInput.value;
-        if (!fechaVal) {
-            errorFecha.classList.remove('show');
-            return false;
-        }
-        const fechaNacimiento = new Date(fechaVal);
-        const hoy = new Date();
-        let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
-        if (hoy.getMonth() < fechaNacimiento.getMonth() ||
-            (hoy.getMonth() === fechaNacimiento.getMonth() && hoy.getDate() < fechaNacimiento.getDate())) {
-            edad--;
-        }
-        const valido = edad >= 18;
-        errorFecha.classList.toggle('show', !valido);
+    function validarFormulario() {
+        let valido = true;
+        valido &= validarCampo(nombre, "errNombre");
+        valido &= validarCampo(apellido1, "errApellido1");
+        valido &= validarCampo(apellido2, "errApellido2");
+        valido &= validarCampo(telefono, "errTelefono");
+        valido &= validarCampo(email, "errEmail");
+        valido &= validarCampo(fechaNacimiento, "errFecha", val => {
+            const fecha = new Date(val);
+            const hoy = new Date();
+            const edad = hoy.getFullYear() - fecha.getFullYear();
+            return edad > 18 || (edad === 18 && hoy >= new Date(fecha.setFullYear(fecha.getFullYear()+18)));
+        });
+        valido &= validarCampo(importe, "errImporte", val => parseFloat(val) <= importeFactura);
+        valido &= validarCampo(plazo, "errPlazo");
+        submitBtn.disabled = !valido;
         return valido;
     }
+
+    inputs.forEach(input => {
+        input.addEventListener("input", () => {
+            validarFormulario();
+            if (input.id === "importe" || input.id === "plazo") calcular();
+        });
+    });
 
     function calcular() {
-        const importe = parseFloat(importeInput.value);
-        const plazo = parseInt(plazoInput.value);
-        if (importeMax > 0 && importe > importeMax) {
-            errorImporte.classList.add('show');
-            resultadosDiv.classList.remove('show');
-            return;
+        const importeVal = parseFloat(importe.value);
+        const plazoVal = parseInt(plazo.value);
+        if (!isNaN(importeVal) && !isNaN(plazoVal) && importeVal <= importeFactura) {
+            const comision = importeVal * 0.02;
+            const totalFinanciar = importeVal + comision;
+            const cuota = totalFinanciar / plazoVal;
+            resultados.innerHTML = `Cuota mensual: <b>${cuota.toFixed(2)} €</b><br>Comisión de apertura: <b>${comision.toFixed(2)} €</b>`;
+            resultados.classList.add("show");
         } else {
-            errorImporte.classList.remove('show');
-        }
-        if (!isNaN(importe) && !isNaN(plazo) && plazo > 0) {
-            let tasa = 0;
-            switch (plazo) {
-                case 6: tasa = 0.025; break;
-                case 9: tasa = 0.036; break;
-                case 10: tasa = 0.045; break;
-                case 12: tasa = 0.0475; break;
-            }
-            const comision = +(importe * tasa).toFixed(2);
-            const total = importe + comision;
-            const cuota = +(total / plazo).toFixed(2);
-            comisionSpan.textContent = comision.toFixed(2);
-            cuotaSpan.textContent = cuota.toFixed(2);
-            resultadosDiv.classList.add('show');
-        } else {
-            resultadosDiv.classList.remove('show');
+            resultados.classList.remove("show");
         }
     }
 
-    telefonoInput.addEventListener('input', () => {
-        telefonoInput.value = telefonoInput.value.replace(/[^0-9]/g, '').slice(0, 9);
-        validarTelefono();
-        updateProgress();
-    });
-    fechaInput.addEventListener('change', () => { validarEdad(); updateProgress(); });
-    importeInput.addEventListener('input', () => { calcular(); updateProgress(); });
-    plazoInput.addEventListener('change', () => { calcular(); updateProgress(); });
-    inputs.forEach(el => el.addEventListener('input', updateProgress));
-
-    document.getElementById('financiacionForm').addEventListener('submit', async e => {
+    form.addEventListener("submit", async (e) => {
         e.preventDefault();
-        if (!validarTelefono() || !validarEdad()) return;
-        spinner.style.display = 'inline-block';
-        submitBtn.disabled = true;
-
-        const datos = {
-            token_inicial: rawToken,
-            nombre: document.getElementById('nombre').value.trim(),
-            apellido1: document.getElementById('apellido1').value.trim(),
-            apellido2: document.getElementById('apellido2').value.trim(),
-            telefono: telefonoInput.value.trim(),
-            email: document.getElementById('email').value.trim(),
-            fechaNacimiento: fechaInput.value.trim(),
-            importe: parseFloat(importeInput.value),
-            plazo: parseInt(plazoInput.value, 10),
-            cuota: cuotaSpan.textContent.trim(),
-            comision: comisionSpan.textContent.trim(),
+        if (!validarFormulario()) return;
+        const payload = {
+            token_inicial: token,
+            nombre: nombre.value,
+            apellido1: apellido1.value,
+            apellido2: apellido2.value,
+            fechaNacimiento: fechaNacimiento.value,
+            telefono: telefono.value,
+            email: email.value,
+            importe: parseFloat(importe.value),
+            plazo: parseInt(plazo.value),
+            cuota: resultados.textContent.match(/Cuota mensual:.*?(\d+,\d+|\d+\.\d+)/)?.[1] || "",
+            comision: resultados.textContent.match(/Comisión de apertura:.*?(\d+,\d+|\d+\.\d+)/)?.[1] || "",
             fechaEnvio: new Date().toISOString()
         };
-
         try {
-            const resp = await fetch("URL_DE_TU_POWER_AUTOMATE", {
+            const resp = await fetch("URL_DE_TU_FLOW", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(datos)
+                body: JSON.stringify(payload)
             });
-            spinner.style.display = 'none';
-            if (!resp.ok) {
-                const errorText = await resp.text();
-                showToast(`Error: ${errorText}`, false);
-                submitBtn.disabled = false;
-                return;
+            if (resp.ok) {
+                showToast("Formulario enviado correctamente");
+                form.reset();
+                resultados.classList.remove("show");
+                submitBtn.disabled = true;
+            } else {
+                showToast("Error en el envío", true);
             }
-            showToast("Solicitud enviada con éxito");
-            e.target.reset();
-            resultadosDiv.classList.remove('show');
-            progressFill.style.width = '0%';
-        } catch (err) {
-            spinner.style.display = 'none';
-            showToast(`Error: ${err.message}`, false);
-            submitBtn.disabled = false;
+        } catch {
+            showToast("Error de conexión", true);
         }
     });
-</script>
 
+    function showToast(msg, error = false) {
+        const toast = document.getElementById("toastMsg");
+        toast.textContent = msg;
+        toast.style.backgroundColor = error ? "#dc3545" : "#28a745";
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 4000);
+    }
+</script>
 </body>
 </html>
