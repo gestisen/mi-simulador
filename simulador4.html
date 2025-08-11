@@ -81,8 +81,12 @@
         cursor: pointer;
         margin-top: 20px;
     }
-    button:hover {
+    button:hover:enabled {
         background-color: #003366;
+    }
+    button:disabled {
+        background-color: #555;
+        cursor: not-allowed;
     }
     .error {
         color: red;
@@ -105,7 +109,7 @@
     <h1 id="facturaInfo">Cargando información de la factura...</h1>
 </header>
 
-<form id="financiacionForm">
+<form id="financiacionForm" novalidate>
 
     <!-- Datos del titular -->
     <fieldset>
@@ -121,13 +125,19 @@
         <input type="text" id="apellido2" name="apellido2" required />
 
         <label for="telefono">Teléfono móvil:</label>
-        <input type="tel" id="telefono" name="telefono" required />
+        <input type="tel" id="telefono" name="telefono" required pattern="^[67]\d{8}$" maxlength="9" />
+        <div id="errorTelefono" class="error" style="display:none;">
+            El teléfono debe tener 9 dígitos y empezar por 6 o 7.
+        </div>
 
         <label for="email">Email:</label>
         <input type="email" id="email" name="email" required />
 
         <label for="fechaNacimiento">Fecha de Nacimiento:</label>
         <input type="date" id="fechaNacimiento" name="fechaNacimiento" required />
+        <div id="errorFecha" class="error" style="display:none;">
+            Debe ser mayor o igual a 18 años.
+        </div>
     </fieldset>
 
     <!-- Datos solicitud -->
@@ -167,7 +177,7 @@
         </div>
     </fieldset>
 
-    <button type="submit">Enviar solicitud</button>
+    <button type="submit" id="submitBtn">Enviar solicitud</button>
 </form>
 
 <script>
@@ -197,6 +207,57 @@
     const resultadosDiv = document.getElementById('resultados');
     const comisionSpan = document.getElementById('comision');
     const cuotaSpan = document.getElementById('cuota');
+    const telefonoInput = document.getElementById('telefono');
+    const errorTelefono = document.getElementById('errorTelefono');
+    const fechaInput = document.getElementById('fechaNacimiento');
+    const errorFecha = document.getElementById('errorFecha');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Validar teléfono móvil: 9 dígitos, empieza por 6 o 7
+    function validarTelefono() {
+        const tel = telefonoInput.value.trim();
+        const valido = /^[67]\d{8}$/.test(tel);
+        if (!valido) {
+            errorTelefono.style.display = 'block';
+        } else {
+            errorTelefono.style.display = 'none';
+        }
+        return valido;
+    }
+
+    telefonoInput.addEventListener('input', () => {
+        // Limitar a 9 caracteres numéricos
+        telefonoInput.value = telefonoInput.value.replace(/[^0-9]/g, '').slice(0, 9);
+        validarTelefono();
+    });
+
+    // Validar edad >= 18 años
+    function validarEdad() {
+        const fechaVal = fechaInput.value;
+        if (!fechaVal) {
+            errorFecha.style.display = 'none';
+            return false;
+        }
+        const fechaNacimiento = new Date(fechaVal);
+        const hoy = new Date();
+        const edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+        const m = hoy.getMonth() - fechaNacimiento.getMonth();
+        const d = hoy.getDate() - fechaNacimiento.getDate();
+        let edadReal = edad;
+        if (m < 0 || (m === 0 && d < 0)) {
+            edadReal--;
+        }
+
+        if (edadReal >= 18) {
+            errorFecha.style.display = 'none';
+            return true;
+        } else {
+            errorFecha.style.display = 'block';
+            return false;
+        }
+    }
+
+    fechaInput.addEventListener('change', validarEdad);
 
     function calcular() {
         const importe = parseFloat(importeInput.value);
@@ -235,8 +296,19 @@
     document.getElementById('financiacionForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        // Validaciones adicionales
         if (importeMax > 0 && parseFloat(importeInput.value) > importeMax) {
             errorImporte.style.display = 'block';
+            return;
+        }
+
+        if (!validarTelefono()) {
+            telefonoInput.focus();
+            return;
+        }
+
+        if (!validarEdad()) {
+            fechaInput.focus();
             return;
         }
 
@@ -245,17 +317,18 @@
             nombre: document.getElementById('nombre').value.trim(),
             apellido1: document.getElementById('apellido1').value.trim(),
             apellido2: document.getElementById('apellido2').value.trim(),
-            telefono: document.getElementById('telefono').value.trim(),
+            telefono: telefonoInput.value.trim(),
             email: document.getElementById('email').value.trim(),
-            fechaNacimiento: document.getElementById('fechaNacimiento').value.trim(),
-            importe: parseFloat(document.getElementById('importe').value),
-            plazo: parseInt(document.getElementById('plazo').value, 10),
-            cuota: document.getElementById("cuota").textContent.trim(),
-            comision: document.getElementById("comision").textContent.trim(),
+            fechaNacimiento: fechaInput.value.trim(),
+            importe: parseFloat(importeInput.value),
+            plazo: parseInt(plazoInput.value, 10),
+            cuota: cuotaSpan.textContent.trim(),
+            comision: comisionSpan.textContent.trim(),
             fechaEnvio: new Date().toISOString()
         };
 
         try {
+            submitBtn.disabled = true; // Deshabilitar botón para evitar múltiples envíos
             const resp = await fetch("https://prod-207.westeurope.logic.azure.com:443/workflows/8d4005d060824266b3f030be660dbad7/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=SxIpL7l4SU6K082eNd7UypsUVtRV9wocnYUBQ2YnKmg", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -265,14 +338,18 @@
             if (!resp.ok) {
                 const errorText = await resp.text();
                 alert(`Error del servidor (${resp.status}): ${errorText}`);
+                submitBtn.disabled = false; // Rehabilitar para intentar de nuevo
                 return;
             }
 
-            alert("Formulario enviado correctamente");
+            alert("Solicitud enviada con éxito, en breve recibirá un correo electrónico de Sabadell Consumer Finance para proseguir con el proceso. Y puede cerrar esta venta. Muchas gracias.");
             e.target.reset();
             resultadosDiv.style.display = 'none';
+            // No volver a habilitar el botón: se queda deshabilitado tras envío correcto.
+
         } catch (err) {
             alert(`Error de red o del servidor: ${err.message}`);
+            submitBtn.disabled = false; // Rehabilitar para intentar de nuevo
         }
     });
 </script>
