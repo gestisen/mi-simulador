@@ -174,28 +174,58 @@
         <input type="text" id="nombre" name="nombre" required />
 
         <label for="apellido1">Apellido 1:
-            <span class="help-icon" data-tooltip="Introduzca su primer apellido.">❓</span>
+            <span class="help-icon" data-tooltip="Introduzca su primer apellido."> <span class="help-icon" data-tooltip="Aquí va el texto de ayuda.">
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="12"/>
+    <text x="12" y="16" text-anchor="middle" font-size="14" font-family="Arial" fill="white" font-weight="bold">i</text>
+  </svg>
+</span>
+</span>
         </label>
         <input type="text" id="apellido1" name="apellido1" required />
 
         <label for="apellido2">Apellido 2:
-            <span class="help-icon" data-tooltip="Introduzca su segundo apellido.">❓</span>
+            <span class="help-icon" data-tooltip="Introduzca su segundo apellido."> <span class="help-icon" data-tooltip="Aquí va el texto de ayuda.">
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="12"/>
+    <text x="12" y="16" text-anchor="middle" font-size="14" font-family="Arial" fill="white" font-weight="bold">i</text>
+  </svg>
+</span>
+</span>
         </label>
         <input type="text" id="apellido2" name="apellido2" required />
 
         <label for="telefono">Teléfono móvil:
-            <span class="help-icon" data-tooltip="Debe comenzar por 6 o 7 y tener 9 dígitos.">❓</span>
+            <span class="help-icon" data-tooltip="Debe comenzar por 6 o 7 y tener 9 dígitos."> <span class="help-icon" data-tooltip="Aquí va el texto de ayuda.">
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="12"/>
+    <text x="12" y="16" text-anchor="middle" font-size="14" font-family="Arial" fill="white" font-weight="bold">i</text>
+  </svg>
+</span>
+</span>
         </label>
         <input type="tel" id="telefono" name="telefono" required pattern="^[67]\d{8}$" maxlength="9" />
         <div id="errorTelefono" class="error" style="display:none;">El teléfono debe tener 9 dígitos y empezar por 6 o 7.</div>
 
         <label for="email">Email:
-            <span class="help-icon" data-tooltip="Introduzca su correo electrónico válido.">❓</span>
+            <span class="help-icon" data-tooltip="Introduzca su correo electrónico válido."> <span class="help-icon" data-tooltip="Aquí va el texto de ayuda.">
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="12"/>
+    <text x="12" y="16" text-anchor="middle" font-size="14" font-family="Arial" fill="white" font-weight="bold">i</text>
+  </svg>
+</span>
+</span>
         </label>
         <input type="email" id="email" name="email" required />
 
         <label for="fechaNacimiento">Fecha de Nacimiento:
-            <span class="help-icon" data-tooltip="Debe ser mayor de 18 años.">❓</span>
+            <span class="help-icon" data-tooltip="Debe ser mayor de 18 años."> <span class="help-icon" data-tooltip="Aquí va el texto de ayuda.">
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="12"/>
+    <text x="12" y="16" text-anchor="middle" font-size="14" font-family="Arial" fill="white" font-weight="bold">i</text>
+  </svg>
+</span>
+</span>
         </label>
         <input type="date" id="fechaNacimiento" name="fechaNacimiento" required />
         <div id="errorFecha" class="error" style="display:none;">Debe ser mayor o igual a 18 años.</div>
@@ -212,14 +242,26 @@
         <div class="importe-plazo">
             <div>
                 <label for="importe">Importe (€):
-                    <span class="help-icon" data-tooltip="No debe superar el importe máximo financiable.">❓</span>
+                    <span class="help-icon" data-tooltip="No debe superar el importe máximo financiable."> <span class="help-icon" data-tooltip="Aquí va el texto de ayuda.">
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="12"/>
+    <text x="12" y="16" text-anchor="middle" font-size="14" font-family="Arial" fill="white" font-weight="bold">i</text>
+  </svg>
+</span>
+</span>
                 </label>
                 <input type="number" id="importe" name="importe" step="0.01" required />
                 <div id="errorImporte" class="error" style="display:none;">El importe no puede superar el máximo financiable.</div>
             </div>
             <div>
                 <label for="plazo">Plazo (meses):
-                    <span class="help-icon" data-tooltip="Seleccione el plazo deseado para pagar.">❓</span>
+                    <span class="help-icon" data-tooltip="Seleccione el plazo deseado para pagar."> <span class="help-icon" data-tooltip="Aquí va el texto de ayuda.">
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="12"/>
+    <text x="12" y="16" text-anchor="middle" font-size="14" font-family="Arial" fill="white" font-weight="bold">i</text>
+  </svg>
+</span>
+ </span>
                 </label>
                 <select id="plazo" name="plazo" required>
                     <option value="">Seleccione...</option>
@@ -353,6 +395,7 @@
             document.querySelectorAll('#financiacionForm input, #financiacionForm select')
                 .forEach(el => { el.disabled = true; el.classList.add('disabled-field'); });
             successMessage.style.display = 'block';
+            successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } catch (err) {
             alert(`Error: ${err.message}`);
             submitBtn.disabled = false;
