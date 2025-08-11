@@ -238,15 +238,18 @@
         }
 
         const datos = {
-            nombre: document.getElementById('nombre').value,
-            apellido1: document.getElementById('apellido1').value,
-            apellido2: document.getElementById('apellido2').value,
-            telefono: document.getElementById('telefono').value,
-            email: document.getElementById('email').value,
-            fechaNacimiento: document.getElementById('fechaNacimiento').value,
-            importe: document.getElementById('importe').value,
-            plazo: document.getElementById('plazo').value,
-            token: rawToken
+            nombre: document.getElementById('nombre').value.trim(),
+            apellido1: document.getElementById('apellido1').value.trim(),
+            apellido2: document.getElementById('apellido2').value.trim(),
+            telefono: document.getElementById('telefono').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            fechaNacimiento: document.getElementById('fechaNacimiento').value.trim(),
+            importe: parseFloat(document.getElementById('importe').value),
+            plazo: parseInt(document.getElementById('plazo').value, 10),
+            token: rawToken,
+            cuota: document.getElementById("cuota").textContent.trim(),
+            comision: document.getElementById("comision").textContent.trim(),
+            fechaEnvio: new Date().toISOString()
         };
 
         try {
