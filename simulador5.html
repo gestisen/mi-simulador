@@ -482,7 +482,8 @@
 
         // Simular envío con timeout (ejemplo)
         setTimeout(() => {
-            alert('Solicitud enviada correctamente. ¡Gracias!');
+            alert('Solicitud enviada con éxito, en breve recibirá un correo electrónico de Sabadell Consumer Finance para proseguir con el proceso. Ya puede cerrar esta ventana. Muchas gracias.');
+            resultadosDiv.style.display = 'none';
             submitBtn.disabled = false;
             submitBtn.classList.remove('loading');
             // Opcional: limpiar form o redirigir
