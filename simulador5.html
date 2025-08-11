@@ -249,8 +249,8 @@
         <legend>Datos Solicitud Financiación</legend>
         
         <div class="section-divider">
-            A continuación introduzca el importe a financiar y seleccione uno de los plazos disponibles para poder obtener la cuota mensual de su solicitud de financiación.  
-            Esta cuota ya lleva incluida y prorrateada la comisión de apertura que aparece debajo.  
+            A continuación, introduzca el importe a financiar y seleccione uno de los plazos disponibles para poder obtener la cuota mensual de su solicitud de financiación.  
+            Esta cuota ya lleva incluida y prorrateada la comisión de apertura.  
             También, recordarle que el importe a financiar será como máximo el importe total de su factura o una cantidad inferior a ésta.
         </div>
 
@@ -483,7 +483,6 @@
         // Simular envío con timeout (ejemplo)
         setTimeout(() => {
             alert('Solicitud enviada con éxito, en breve recibirá un correo electrónico de Sabadell Consumer Finance para proseguir con el proceso. Ya puede cerrar esta ventana. Muchas gracias.');
-            resultadosDiv.style.display = 'none';
             submitBtn.disabled = false;
             submitBtn.classList.remove('loading');
             // Opcional: limpiar form o redirigir
