@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
@@ -393,66 +393,63 @@ document.addEventListener('DOMContentLoaded', () => {
         resultadosDiv.classList.remove('show');
         successMessage.style.display = 'none';
 
-        // Valores inputs
-        const tel = form.telefono.value.trim();
-        const fechaNac = form.fechaNacimiento.value;
+        let valido = true;
+
+        const telefono = form.telefono.value.trim();
+        const fechaNacimiento = form.fechaNacimiento.value;
         const importe = parseFloat(form.importe.value);
         const plazo = form.plazo.value;
 
-        let valid = true;
-
-        if (!validarTelefono(tel)) {
+        // Validaciones
+        if (!validarTelefono(telefono)) {
             errorTelefono.classList.add('show');
-            valid = false;
+            valido = false;
         }
-        if (!validarEdad(fechaNac)) {
+        if (!validarEdad(fechaNacimiento)) {
             errorFecha.classList.add('show');
-            valid = false;
+            valido = false;
         }
         if (!validarImporte(importe)) {
             errorImporte.classList.add('show');
-            valid = false;
+            valido = false;
         }
         if (!validarPlazo(plazo)) {
             errorPlazo.classList.add('show');
-            valid = false;
+            valido = false;
         }
 
-        if (!valid) return;
+        if (!valido) return;
 
         // Mostrar spinner y deshabilitar botón
         submitBtn.disabled = true;
         submitBtn.classList.add('loading');
 
-        // Simular envío 2 seg
+        // Simular llamada asincrónica para cálculo
         setTimeout(() => {
-            // Calculo ejemplo cuota mensual simple (sin interés real, solo como demo)
-            const comisionApertura = 0.03; // 3%
-            const importeTotal = importe * (1 + comisionApertura);
-            const cuota = importeTotal / parseInt(plazo);
+            // Calculo cuota mensual con comisión apertura del 2%
+            const comisionApertura = 0.02 * importe;
+            const importeTotal = importe + comisionApertura;
+            const cuotaMensual = importeTotal / parseInt(plazo);
 
+            // Mostrar resultados con fade-in
             resultadosDiv.innerHTML = `
-                <p><strong>Importe solicitado:</strong> ${importe.toFixed(2)} €</p>
-                <p><strong>Plazo:</strong> ${plazo} meses</p>
-                <p><strong>Comisión de apertura:</strong> 3%</p>
-                <p><strong>Importe total a pagar:</strong> ${importeTotal.toFixed(2)} €</p>
-                <p><strong>Cuota mensual aproximada:</strong> ${cuota.toFixed(2)} €</p>
+                <p><strong>Comisión de apertura (2%):</strong> ${comisionApertura.toFixed(2)} €</p>
+                <p><strong>Importe total a financiar:</strong> ${importeTotal.toFixed(2)} €</p>
+                <p><strong>Cuota mensual (${plazo} meses):</strong> ${cuotaMensual.toFixed(2)} €</p>
             `;
             resultadosDiv.classList.add('show');
 
-            // Mostrar mensaje éxito animado y scroll suave
-            successMessage.style.display = 'block';
-            successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-            // Quitar spinner y habilitar botón
+            // Ocultar spinner y habilitar botón
             submitBtn.disabled = false;
             submitBtn.classList.remove('loading');
 
-            // Opcional: limpiar formulario si quieres
-            // form.reset();
+            // Mostrar mensaje éxito
+            successMessage.style.display = 'block';
+
         }, 2000);
 
     });
+
 });
 </script>
 
