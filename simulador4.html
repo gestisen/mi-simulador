@@ -13,7 +13,7 @@
         color: #333;
     }
     header {
-        background-color: #002147; /* azul marino */
+        background-color: #002147;
         color: white;
         padding: 20px;
         text-align: center;
@@ -153,8 +153,9 @@
                 <select id="plazo" name="plazo" required>
                     <option value="">Seleccione...</option>
                     <option value="6">6 meses</option>
+                    <option value="9">9 meses</option>
+                    <option value="10">10 meses</option>
                     <option value="12">12 meses</option>
-                    <option value="24">24 meses</option>
                 </select>
             </div>
         </div>
@@ -170,12 +171,9 @@
 </form>
 
 <script>
-    // Obtener token desde URL
     const params = new URLSearchParams(window.location.search);
     const rawToken = params.get('token') || '';
     const decoded = decodeURIComponent(rawToken);
-
-    // Separar por "|"
     const partes = decoded.split('|'); // IDFRA|DNI|AÑO|NUMFACTURA|IMPORTE
     let numFactura = '';
     let importeMax = 0;
@@ -185,7 +183,6 @@
         importeMax = parseFloat(partes[4]) || 0;
     }
 
-    // Mostrar en encabezado
     if (numFactura) {
         document.getElementById('facturaInfo').textContent =
             `Factura Nº ${numFactura} — Importe máximo financiable: ${importeMax.toFixed(2)} €`;
@@ -214,7 +211,14 @@
         }
 
         if (!isNaN(importe) && !isNaN(plazo) && plazo > 0) {
-            const comision = +(importe * 0.03).toFixed(2); // 3% comisión apertura
+            let tasa = 0;
+            switch (plazo) {
+                case 6: tasa = 0.025; break;
+                case 9: tasa = 0.036; break;
+                case 10: tasa = 0.045; break;
+                case 12: tasa = 0.0475; break;
+            }
+            const comision = +(importe * tasa).toFixed(2);
             const totalFinanciado = importe + comision;
             const cuota = +(totalFinanciado / plazo).toFixed(2);
             comisionSpan.textContent = comision.toFixed(2);
@@ -228,7 +232,6 @@
     importeInput.addEventListener('input', calcular);
     plazoInput.addEventListener('change', calcular);
 
-    // Envío del formulario
     document.getElementById('financiacionForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -238,6 +241,7 @@
         }
 
         const datos = {
+            token_inicial: rawToken, // ahora coincide con el esquema de Power Automate
             nombre: document.getElementById('nombre').value.trim(),
             apellido1: document.getElementById('apellido1').value.trim(),
             apellido2: document.getElementById('apellido2').value.trim(),
@@ -246,7 +250,6 @@
             fechaNacimiento: document.getElementById('fechaNacimiento').value.trim(),
             importe: parseFloat(document.getElementById('importe').value),
             plazo: parseInt(document.getElementById('plazo').value, 10),
-            token: rawToken,
             cuota: document.getElementById("cuota").textContent.trim(),
             comision: document.getElementById("comision").textContent.trim(),
             fechaEnvio: new Date().toISOString()
@@ -255,9 +258,7 @@
         try {
             const resp = await fetch("https://prod-207.westeurope.logic.azure.com:443/workflows/8d4005d060824266b3f030be660dbad7/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=SxIpL7l4SU6K082eNd7UypsUVtRV9wocnYUBQ2YnKmg", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(datos)
             });
 
