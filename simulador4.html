@@ -27,12 +27,23 @@
         font-size: 1.4em;
     }
     form {
-        max-width: 600px;
+        max-width: 700px;
         background: white;
         margin: 20px auto;
         padding: 20px;
         border-radius: 10px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    fieldset {
+        border: 2px solid #002147;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        padding: 15px;
+    }
+    legend {
+        font-weight: bold;
+        color: #002147;
+        padding: 0 10px;
     }
     label {
         display: block;
@@ -47,10 +58,11 @@
         border: 1px solid #ccc;
     }
     .section-divider {
-        margin: 20px 0;
-        padding: 15px;
+        margin: 15px 0;
+        padding: 10px;
         background-color: #f0f4f8;
         border-left: 4px solid #002147;
+        font-size: 0.9em;
     }
     .importe-plazo {
         display: flex;
@@ -77,6 +89,13 @@
         margin-top: 4px;
         font-size: 0.9em;
     }
+    .resultados {
+        margin-top: 15px;
+        padding: 10px;
+        background: #eaf1f8;
+        border-radius: 5px;
+        border: 1px solid #b5cce6;
+    }
 </style>
 </head>
 <body>
@@ -87,39 +106,65 @@
 </header>
 
 <form id="financiacionForm">
-    <label for="nombre">Nombre:</label>
-    <input type="text" id="nombre" name="nombre" required />
 
-    <label for="apellidos">Apellidos:</label>
-    <input type="text" id="apellidos" name="apellidos" required />
+    <!-- Datos del titular -->
+    <fieldset>
+        <legend>Datos del Titular de la Financiación</legend>
+        
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" required />
 
-    <label for="dni">DNI:</label>
-    <input type="text" id="dni" name="dni" required />
+        <label for="apellido1">Apellido 1:</label>
+        <input type="text" id="apellido1" name="apellido1" required />
 
-    <div class="section-divider">
-        A continuación introduzca el importe a financiar y seleccione uno de los plazos disponibles para poder obtener la cuota mensual de su solicitud de financiación.  
-        Esta cuota ya lleva incluida y prorrateada la comisión de apertura que aparece debajo.  
-        También, recordarle que el importe a financiar será como máximo el importe total de su factura o una cantidad inferior a ésta.
-    </div>
+        <label for="apellido2">Apellido 2:</label>
+        <input type="text" id="apellido2" name="apellido2" required />
 
-    <div class="importe-plazo">
-        <div>
-            <label for="importe">Importe (€):</label>
-            <input type="number" id="importe" name="importe" step="0.01" required />
-            <div id="errorImporte" class="error" style="display:none;">
-                El importe no puede superar el máximo financiable.
+        <label for="telefono">Teléfono móvil:</label>
+        <input type="tel" id="telefono" name="telefono" required />
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required />
+
+        <label for="fechaNacimiento">Fecha de Nacimiento:</label>
+        <input type="date" id="fechaNacimiento" name="fechaNacimiento" required />
+    </fieldset>
+
+    <!-- Datos solicitud -->
+    <fieldset>
+        <legend>Datos Solicitud Financiación</legend>
+        
+        <div class="section-divider">
+            A continuación introduzca el importe a financiar y seleccione uno de los plazos disponibles para poder obtener la cuota mensual de su solicitud de financiación.  
+            Esta cuota ya lleva incluida y prorrateada la comisión de apertura que aparece debajo.  
+            También, recordarle que el importe a financiar será como máximo el importe total de su factura o una cantidad inferior a ésta.
+        </div>
+
+        <div class="importe-plazo">
+            <div>
+                <label for="importe">Importe (€):</label>
+                <input type="number" id="importe" name="importe" step="0.01" required />
+                <div id="errorImporte" class="error" style="display:none;">
+                    El importe no puede superar el máximo financiable.
+                </div>
+            </div>
+            <div>
+                <label for="plazo">Plazo (meses):</label>
+                <select id="plazo" name="plazo" required>
+                    <option value="">Seleccione...</option>
+                    <option value="6">6 meses</option>
+                    <option value="12">12 meses</option>
+                    <option value="24">24 meses</option>
+                </select>
             </div>
         </div>
-        <div>
-            <label for="plazo">Plazo (meses):</label>
-            <select id="plazo" name="plazo" required>
-                <option value="">Seleccione...</option>
-                <option value="6">6 meses</option>
-                <option value="12">12 meses</option>
-                <option value="24">24 meses</option>
-            </select>
+
+        <!-- Resultados cálculo -->
+        <div class="resultados" id="resultados" style="display:none;">
+            <p>Comisión de apertura: <span id="comision"></span> €</p>
+            <p>Cuota mensual: <span id="cuota"></span> €</p>
         </div>
-    </div>
+    </fieldset>
 
     <button type="submit">Enviar solicitud</button>
 </form>
@@ -132,7 +177,6 @@
 
     // Separar por "|"
     const partes = decoded.split('|'); // IDFRA|DNI|AÑO|NUMFACTURA|IMPORTE
-
     let numFactura = '';
     let importeMax = 0;
 
@@ -150,17 +194,39 @@
             'No se ha podido identificar la factura.';
     }
 
-    // Validación importe
     const importeInput = document.getElementById('importe');
+    const plazoInput = document.getElementById('plazo');
     const errorImporte = document.getElementById('errorImporte');
+    const resultadosDiv = document.getElementById('resultados');
+    const comisionSpan = document.getElementById('comision');
+    const cuotaSpan = document.getElementById('cuota');
 
-    importeInput.addEventListener('input', () => {
-        if (importeMax > 0 && parseFloat(importeInput.value) > importeMax) {
+    function calcular() {
+        const importe = parseFloat(importeInput.value);
+        const plazo = parseInt(plazoInput.value);
+
+        if (importeMax > 0 && importe > importeMax) {
             errorImporte.style.display = 'block';
+            resultadosDiv.style.display = 'none';
+            return;
         } else {
             errorImporte.style.display = 'none';
         }
-    });
+
+        if (!isNaN(importe) && !isNaN(plazo) && plazo > 0) {
+            const comision = +(importe * 0.03).toFixed(2); // 3% comisión apertura
+            const totalFinanciado = importe + comision;
+            const cuota = +(totalFinanciado / plazo).toFixed(2);
+            comisionSpan.textContent = comision.toFixed(2);
+            cuotaSpan.textContent = cuota.toFixed(2);
+            resultadosDiv.style.display = 'block';
+        } else {
+            resultadosDiv.style.display = 'none';
+        }
+    }
+
+    importeInput.addEventListener('input', calcular);
+    plazoInput.addEventListener('change', calcular);
 
     // Envío del formulario
     document.getElementById('financiacionForm').addEventListener('submit', async (e) => {
@@ -173,8 +239,11 @@
 
         const datos = {
             nombre: document.getElementById('nombre').value,
-            apellidos: document.getElementById('apellidos').value,
-            dni: document.getElementById('dni').value,
+            apellido1: document.getElementById('apellido1').value,
+            apellido2: document.getElementById('apellido2').value,
+            telefono: document.getElementById('telefono').value,
+            email: document.getElementById('email').value,
+            fechaNacimiento: document.getElementById('fechaNacimiento').value,
             importe: document.getElementById('importe').value,
             plazo: document.getElementById('plazo').value,
             token: rawToken
@@ -197,6 +266,7 @@
 
             alert("Formulario enviado correctamente");
             e.target.reset();
+            resultadosDiv.style.display = 'none';
         } catch (err) {
             alert(`Error de red o del servidor: ${err.message}`);
         }
