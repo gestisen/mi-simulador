@@ -267,4 +267,194 @@
         <div class="section-divider">
             A continuación, introduzca el importe a financiar y seleccione uno de los plazos disponibles para poder obtener la cuota mensual de su solicitud de financiación.  
             Esta cuota ya lleva incluida y prorrateada la comisión de apertura.  
-            También, recordarle que el importe
+            También, recordarle que el importe máximo de financiación permitido es de 25.000 euros.
+        </div>
+        
+        <div class="importe-plazo">
+            <div>
+                <label for="importe">Importe a financiar:
+                    <span class="help-icon" data-tooltip="Importe máximo permitido: 25.000 euros.">
+                      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" >
+                        <circle cx="12" cy="12" r="12"/>
+                        <text x="12" y="16" text-anchor="middle" font-size="14" font-family="Arial" fill="white" font-weight="bold">i</text>
+                      </svg>
+                    </span>
+                </label>
+                <input type="number" id="importe" name="importe" min="1" max="25000" required />
+            </div>
+
+            <div>
+                <label for="plazo">Plazo:</label>
+                <select id="plazo" name="plazo" required>
+                    <option value="" disabled selected>Seleccione plazo</option>
+                    <option value="6">6 meses</option>
+                    <option value="12">12 meses</option>
+                    <option value="18">18 meses</option>
+                    <option value="24">24 meses</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="errorImporte" class="error">El importe debe estar entre 1 y 25.000 euros.</div>
+        <div id="errorPlazo" class="error">Debe seleccionar un plazo válido.</div>
+
+    </fieldset>
+
+    <!-- Resultados -->
+    <fieldset>
+        <legend>Resultados</legend>
+        <div id="resultados" class="resultados"></div>
+    </fieldset>
+
+    <!-- Botón enviar -->
+    <button id="submitBtn" type="submit">
+        <div class="spinner"></div>
+        <span class="btn-text">Solicitar Financiación</span>
+    </button>
+
+    <!-- Mensaje éxito -->
+    <div id="successMessage">Solicitud enviada con éxito.</div>
+
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Carga simulada de info factura
+    const facturaInfo = document.getElementById('facturaInfo');
+    setTimeout(() => {
+        facturaInfo.textContent = 'Factura Nº 20250811-001 - Fecha 11/08/2025';
+    }, 800);
+
+    // Progress bar (ejemplo simple)
+    const progressBar = document.getElementById('progressBar');
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        if(progress >= 100) {
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+        } else {
+            progress += 10;
+            progressBar.style.width = progress + '%';
+        }
+    }, 150);
+
+    const form = document.getElementById('financiacionForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const spinner = submitBtn.querySelector('.spinner');
+    const successMessage = document.getElementById('successMessage');
+    const resultadosDiv = document.getElementById('resultados');
+
+    // Errores
+    const errorTelefono = document.getElementById('errorTelefono');
+    const errorFecha = document.getElementById('errorFecha');
+    const errorImporte = document.getElementById('errorImporte');
+    const errorPlazo = document.getElementById('errorPlazo');
+
+    // Inicialmente ocultar errores y resultados
+    errorTelefono.classList.remove('show');
+    errorFecha.classList.remove('show');
+    errorImporte.classList.remove('show');
+    errorPlazo.classList.remove('show');
+    resultadosDiv.classList.remove('show');
+
+    function validarTelefono(tel) {
+        return /^[67]\d{8}$/.test(tel);
+    }
+
+    function validarEdad(fecha) {
+        if (!fecha) return false;
+        const hoy = new Date();
+        const fechaNac = new Date(fecha);
+        const edad = hoy.getFullYear() - fechaNac.getFullYear();
+        const m = hoy.getMonth() - fechaNac.getMonth();
+        if (m < 0 || (m === 0 && hoy.getDate() < fechaNac.getDate())) {
+            return edad - 1 >= 18;
+        }
+        return edad >= 18;
+    }
+
+    function validarImporte(imp) {
+        return imp >= 1 && imp <= 25000;
+    }
+
+    function validarPlazo(plazo) {
+        return ['6','12','18','24'].includes(plazo);
+    }
+
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+
+        // Reset errores y mensajes
+        errorTelefono.classList.remove('show');
+        errorFecha.classList.remove('show');
+        errorImporte.classList.remove('show');
+        errorPlazo.classList.remove('show');
+        resultadosDiv.classList.remove('show');
+        successMessage.style.display = 'none';
+
+        // Valores inputs
+        const tel = form.telefono.value.trim();
+        const fechaNac = form.fechaNacimiento.value;
+        const importe = parseFloat(form.importe.value);
+        const plazo = form.plazo.value;
+
+        let valid = true;
+
+        if (!validarTelefono(tel)) {
+            errorTelefono.classList.add('show');
+            valid = false;
+        }
+        if (!validarEdad(fechaNac)) {
+            errorFecha.classList.add('show');
+            valid = false;
+        }
+        if (!validarImporte(importe)) {
+            errorImporte.classList.add('show');
+            valid = false;
+        }
+        if (!validarPlazo(plazo)) {
+            errorPlazo.classList.add('show');
+            valid = false;
+        }
+
+        if (!valid) return;
+
+        // Mostrar spinner y deshabilitar botón
+        submitBtn.disabled = true;
+        submitBtn.classList.add('loading');
+
+        // Simular envío 2 seg
+        setTimeout(() => {
+            // Calculo ejemplo cuota mensual simple (sin interés real, solo como demo)
+            const comisionApertura = 0.03; // 3%
+            const importeTotal = importe * (1 + comisionApertura);
+            const cuota = importeTotal / parseInt(plazo);
+
+            resultadosDiv.innerHTML = `
+                <p><strong>Importe solicitado:</strong> ${importe.toFixed(2)} €</p>
+                <p><strong>Plazo:</strong> ${plazo} meses</p>
+                <p><strong>Comisión de apertura:</strong> 3%</p>
+                <p><strong>Importe total a pagar:</strong> ${importeTotal.toFixed(2)} €</p>
+                <p><strong>Cuota mensual aproximada:</strong> ${cuota.toFixed(2)} €</p>
+            `;
+            resultadosDiv.classList.add('show');
+
+            // Mostrar mensaje éxito animado y scroll suave
+            successMessage.style.display = 'block';
+            successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Quitar spinner y habilitar botón
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('loading');
+
+            // Opcional: limpiar formulario si quieres
+            // form.reset();
+        }, 2000);
+
+    });
+});
+</script>
+
+</body>
+</html>
