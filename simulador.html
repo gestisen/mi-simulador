@@ -392,10 +392,24 @@
             });
             if (!resp.ok) throw new Error(await resp.text());
 
-            document.querySelectorAll('#financiacionForm input, #financiacionForm select')
-                .forEach(el => { el.disabled = true; el.classList.add('disabled-field'); });
+                        // Ocultar los campos del formulario y el botón
+            document.querySelectorAll('#financiacionForm fieldset, #submitBtn').forEach(el => { 
+                el.style.display = 'none'; 
+            });
+            
+            // Mostrar mensaje de éxito actualizado
             successMessage.style.display = 'block';
-            successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            successMessage.innerHTML = '✅ Solicitud enviada con éxito. En breve recibirá un correo electrónico.<br><br><i>Cerrando esta ventana por seguridad en unos segundos...</i>';
+            
+            // Esperar 4 segundos (4000 milisegundos) y cerrar la ventana
+            setTimeout(() => {
+                window.close(); // Intenta cerrar la pestaña automáticamente
+                
+                // Si el navegador de su móvil u ordenador bloquea el cierre, borramos todo y mostramos esto:
+                document.body.innerHTML = "<h3 style='text-align:center; padding-top:60px; color:#002147; font-family:sans-serif;'>Solicitud completada.<br><br>Ya puede cerrar esta pestaña.</h3>";
+            }, 4000);
+
+            
         } catch (err) {
             alert(`Error: ${err.message}`);
             submitBtn.disabled = false;
