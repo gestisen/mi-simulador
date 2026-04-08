@@ -401,13 +401,13 @@
             successMessage.style.display = 'block';
             successMessage.innerHTML = '✅ Solicitud enviada con éxito. En breve recibirá un correo electrónico.<br><br><i>Cerrando esta ventana por seguridad en unos segundos...</i>';
             
-            // Esperar 4 segundos (4000 milisegundos) y cerrar la ventana
+            // Esperar 5 segundos (5000 milisegundos) y cerrar la ventana
             setTimeout(() => {
                 window.close(); // Intenta cerrar la pestaña automáticamente
                 
                 // Si el navegador de su móvil u ordenador bloquea el cierre, borramos todo y mostramos esto:
                 document.body.innerHTML = "<h3 style='text-align:center; padding-top:60px; color:#002147; font-family:sans-serif;'>Solicitud completada.<br><br>Ya puede cerrar esta pestaña.</h3>";
-            }, 4000);
+            }, 5000);
 
             
         } catch (err) {
