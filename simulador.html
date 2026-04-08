@@ -385,7 +385,7 @@
 
         try {
             submitBtn.disabled = true;
-            const resp = await fetch("https://prod-207.westeurope.logic.azure.com:443/workflows/8d4005d060824266b3f030be660dbad7/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=SxIpL7l4SU6K082eNd7UypsUVtRV9wocnYUBQ2YnKmg", {
+            const resp = await fetch("https://b4acd1d386d1e9c88719cc020fe7f4.57.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8d4005d060824266b3f030be660dbad7/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=aHS9co_SMDF_FQXDgw4Ju2vdy7jqemnU9MUgo6nJTvk", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(datos)
